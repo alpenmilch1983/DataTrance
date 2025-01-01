@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Association Analysis - Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px; 
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input[type=file], input[type=number], input[type=submit] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+        .note {
+            font-size: 0.9em;
+            color: #555;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even){background-color: #f2f2f2;}
+        tr:hover {background-color: #ddd;}
+        .download-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .download-link a {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 0 10px;
+        }
+        .download-link a:hover {
+            background-color: #005f6a;
+        }
+        .graph {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .graph img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #777;
+        }
+    </style>
+    <!-- Optional: DataTables for table enhancements -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('table').DataTable();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Association Analysis - Upload</h1>
+
+        <!-- Upload Form -->
+        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+            <p>
+                <input type="file" name="file" accept=".xlsx" required>
+            </p>
+            <p>
+                <label for="min_support">Min. Support:</label>
+                <input type="number" id="min_support" name="min_support" step="0.01" min="0.0" max="1.0"
+                       value="{{ min_support }}" required>
+            </p>
+            <p>
+                <label for="min_confidence">Min. Confidence:</label>
+                <input type="number" id="min_confidence" name="min_confidence" step="0.01" min="0.0" max="1.0"
+                       value="{{ min_confidence }}" required>
+            </p>
+            <p>
+                <label for="min_combination_count">Min. Combination Count:</label>
+                <input type="number" id="min_combination_count" name="min_combination_count" step="1" min="1"
+                       value="{{ min_combination_count }}" required>
+            </p>
+            <p class="note">
+                Please ensure that your Excel file has the following structure:
+                <br>- Each row represents one spare part (SPC) in a Notification ID.
+                <br>- The first column is named 'Notification' and contains the Notification ID.
+                <br>- The second column is named 'SPC' and contains the spare part name.
+                <br>- The Excel sheet must be named 'Export'.
+                <br>- No empty cells in the Notification or SPC columns.
+            </p>
+            <p>
+                <input type="submit" value="Upload and Analyze">
+            </p>
+        </form>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if rules %}
+            <h2>Association Rules</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Antecedents</th>
+                        <th>Consequents</th>
+                        <th>Combination Count</th>
+                        <th>Support</th>
+                        <th>Confidence (%)</th>
+                        <th>Lift</th>
+                        <th>Leverage</th>
+                        <th>Conviction</th>
+                        <th>Zhang's Metric</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in rules %}
+                        <tr>
+                            <td>{{ rule.antecedents }}</td>
+                            <td>{{ rule.consequents }}</td>
+                            <td>{{ rule.count }}</td>
+                            <td>{{ "%.4f"|format(rule.support) }}</td>
+                            <td>{{ "%.2f"|format(rule.confidence) }}%</td>
+                            <td>{{ "%.4f"|format(rule.lift) }}</td>
+                            <td>{{ "%.4f"|format(rule.leverage) }}</td>
+                            <td>{{ "%.4f"|format(rule.conviction) }}</td>
+                            <td>{{ rule.zhangs_metric if rule.zhangs_metric else "N/A" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="download-link">
+                <a href="{{ download_link }}">Download Excel Rules</a>
+                <a href="{{ download_graph_link }}">Download Graph PNG</a>
+            </div>
+
+            <!-- Refresh Form -->
+            <form action="{{ url_for('refresh') }}" method="post">
+                <h2>Update Thresholds</h2>
+                <p>
+                    <label for="min_support_refresh">Min. Support:</label>
+                    <input type="number" id="min_support_refresh" name="min_support" 
+                           step="0.01" min="0.0" max="1.0" value="{{ min_support }}" required>
+                </p>
+                <p>
+                    <label for="min_confidence_refresh">Min. Confidence:</label>
+                    <input type="number" id="min_confidence_refresh" name="min_confidence" 
+                           step="0.01" min="0.0" max="1.0" value="{{ min_confidence }}" required>
+                </p>
+                <p>
+                    <label for="min_combination_count_refresh">Min. Combination Count:</label>
+                    <input type="number" id="min_combination_count_refresh" name="min_combination_count" 
+                           step="1" min="1" value="{{ min_combination_count }}" required>
+                </p>
+                <p>
+                    <input type="submit" value="Refresh Analysis">
+                </p>
+            </form>
+        {% elif no_rules %}
+            <div class="error">No rules found for the given thresholds.</div>
+            <form action="{{ url_for('refresh') }}" method="post">
+                <h2>Update Thresholds</h2>
+                <p>
+                    <label for="min_support_refresh">Min. Support:</label>
+                    <input type="number" id="min_support_refresh" name="min_support" 
+                           step="0.01" min="0.0" max="1.0" value="{{ min_support }}" required>
+                </p>
+                <p>
+                    <label for="min_confidence_refresh">Min. Confidence:</label>
+                    <input type="number" id="min_confidence_refresh" name="min_confidence" 
+                           step="0.01" min="0.0" max="1.0" value="{{ min_confidence }}" required>
+                </p>
+                <p>
+                    <label for="min_combination_count_refresh">Min. Combination Count:</label>
+                    <input type="number" id="min_combination_count_refresh" name="min_combination_count" 
+                           step="1" min="1" value="{{ min_combination_count }}" required>
+                </p>
+                <p>
+                    <input type="submit" value="Refresh Analysis">
+                </p>
+            </form>
+        {% endif %}
+
+        {% if graph %}
+            <div class="graph">
+                <h2>Visualization of Association Rules</h2>
+                <img src="data:image/png;base64,{{ graph }}" alt="Association Rules Graph">
+            </div>
+        {% endif %}
+
+        <footer>
+            <p>&copy; 2024 Your Organization. All rights reserved.</p>
+            <p>This software is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank">GNU GPL</a>.</p>
+            <p>Uses Python libraries:</p>
+            <ul>
+                <li><a href="https://pandas.pydata.org/">pandas</a></li>
+                <li><a href="http://rasbt.github.io/mlxtend/">mlxtend</a></li>
+                <li><a href="https://networkx.org/">networkx</a></li>
+                <li><a href="https://matplotlib.org/">matplotlib</a></li>
+                <li><a href="https://openpyxl.readthedocs.io/">openpyxl</a></li>
+                <li><a href="https://palletsprojects.com/p/flask/">Flask</a></li>
+                <li><a href="https://werkzeug.palletsprojects.com/">Werkzeug</a></li>
+            </ul>
+        </footer>
+    </div>
+</body>
+</html>
