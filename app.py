@@ -303,7 +303,7 @@ def upload_file():
                 # z. B. * 10 als Skalierung
                 ordered_node_sizes.append(size_val * 1)
 
-            fig, ax = plt.subplots(figsize=(50, 50), dpi=500)
+            fig, ax = plt.subplots(figsize=(30, 30), dpi=500)
             pos = nx.spring_layout(G, k=2.9, iterations=200)
 
             # Node Size = ordered_node_sizes
