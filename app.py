@@ -299,11 +299,11 @@ def upload_file():
             ordered_node_sizes = []
             for node in G.nodes():
                 # Falls irgendwas schief geht: Default 50
-                size_val = node_sizes_dict.get(node, 4)
+                size_val = node_sizes_dict.get(node, 1)
                 # z. B. * 10 als Skalierung
-                ordered_node_sizes.append(size_val * 4)
+                ordered_node_sizes.append(size_val * 1)
 
-            fig, ax = plt.subplots(figsize=(30, 30), dpi=500)
+            fig, ax = plt.subplots(figsize=(15, 15), dpi=500)
             pos = nx.spring_layout(G, k=2.9, iterations=200)
 
             # Node Size = ordered_node_sizes
